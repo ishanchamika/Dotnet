@@ -24,9 +24,9 @@ namespace Register.Controllers
 
             if(allEmployees == null || !allEmployees.Any())
             {
-                return NotFound("No employees found");
+                return NotFound(new {status = false , message = "No employees found" });
             }
-            return Ok(allEmployees);
+            return Ok(new {status = true , message = "Successfully fetched employees", data = allEmployees });
         }
         [HttpGet]
         [Route("{id:guid}")]

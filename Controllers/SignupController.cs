@@ -1,5 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using Register.Data;
 using Register.Models;
 using Register.Models.Entities;
@@ -11,10 +15,12 @@ namespace Register.Controllers
     public class SignupController : ControllerBase
     {
         private readonly ApplicationDbContext _dbContext;
+        private readonly IConfiguration configuration;
 
-        public SignupController(ApplicationDbContext _dbContext)
+        public SignupController(ApplicationDbContext _dbContext, IConfiguration configuration)
         {
             this._dbContext = _dbContext;
+            this.configuration = configuration;
         }
 
         [HttpGet]
@@ -84,6 +90,41 @@ namespace Register.Controllers
             _dbContext.Signups.Remove(user);
             _dbContext.SaveChanges();
             return Ok(user);
+        }
+
+
+        [HttpPost("login")]
+        public IActionResult Login(LoginDto loginDto)
+        {
+            if (loginDto == null)
+            {
+                return BadRequest(new { status = false, message = "Invalid login data" });
+            }
+
+            var user = _dbContext.Signups.FirstOrDefault(u => u.Email == loginDto.Email);
+
+            if (user == null)
+            {
+                return NotFound(new { status = false, message = "Invalid email" });
+            }
+
+            if (user.Password != loginDto.Password)
+            {
+                return BadRequest(new { status = false, message = "Invalid password" });
+            }
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, configuration["Jwt:Subject"]),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim("UserId", user.Id.ToString()),
+                new Claim("Email", user.Email.ToString()),
+            };
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
+            var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var token = new JwtSecurityToken(configuration["Jwt:Issuer"], configuration["Jwt:Audience"], claims, expires: DateTime.UtcNow.AddMinutes(15),signingCredentials: signIn);
+            string tokenValue = new JwtSecurityTokenHandler().WriteToken(token);
+
+            return Ok(new { status = true, message = "Login successful", Token = tokenValue ,data = user });
         }
     }
 }
