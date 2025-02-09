@@ -16,18 +16,19 @@ namespace Register.Controllers
         {
             this.dbContext = dbContext;
         }
-        
+
         [HttpGet]
         public IActionResult GetAllEmployees()
         {
             var allEmployees = dbContext.Employees.ToList();
-
-            if(allEmployees == null || !allEmployees.Any())
+            if (allEmployees == null || !allEmployees.Any())
             {
-                return NotFound(new {status = false , message = "No employees found" });
+                return NotFound(new { status = false, message = "No employees found" });
             }
-            return Ok(new {status = true , message = "Successfully fetched employees", data = allEmployees });
+            var employeesObject = allEmployees.ToDictionary(emp => emp.Id.ToString());
+            return Ok(employeesObject);
         }
+
         [HttpGet]
         [Route("{id:guid}")]
         public IActionResult GetEmployeeById(Guid id)

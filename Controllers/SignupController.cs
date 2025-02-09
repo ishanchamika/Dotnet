@@ -1,6 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -36,6 +37,7 @@ namespace Register.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         [Route("{id:guid}")]
         public IActionResult GetUserById(Guid id) 
         {
@@ -98,19 +100,19 @@ namespace Register.Controllers
         {
             if (loginDto == null)
             {
-                return BadRequest(new { status = false, message = "Invalid login data" });
+                return Ok(new { status = false, message = "Invalid login data" });
             }
 
             var user = _dbContext.Signups.FirstOrDefault(u => u.Email == loginDto.Email);
 
             if (user == null)
             {
-                return NotFound(new { status = false, message = "Invalid email" });
+                return Ok(new { status = false, message = "Invalid email" });
             }
 
             if (user.Password != loginDto.Password)
             {
-                return BadRequest(new { status = false, message = "Invalid password" });
+                return Ok(new { status = false, message = "Invalid password" });
             }
             var claims = new[]
             {
@@ -121,10 +123,27 @@ namespace Register.Controllers
             };
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
             var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var token = new JwtSecurityToken(configuration["Jwt:Issuer"], configuration["Jwt:Audience"], claims, expires: DateTime.UtcNow.AddMinutes(15),signingCredentials: signIn);
+            var token = new JwtSecurityToken(configuration["Jwt:Issuer"], configuration["Jwt:Audience"], claims, expires: DateTime.UtcNow.AddMinutes(10),signingCredentials: signIn);
             string tokenValue = new JwtSecurityTokenHandler().WriteToken(token);
 
             return Ok(new { status = true, message = "Login successful", Token = tokenValue ,data = user });
         }
+
+
+        [Authorize] // Ensures the endpoint requires authentication
+        [HttpGet("profile")]
+        public IActionResult GetUserProfile()
+        {
+            var userId = User.FindFirst("UserId")?.Value;  // Get UserId from token
+            var email = User.FindFirst("Email")?.Value;    // Get Email from token
+
+            if (userId == null || email == null)
+            {
+                return Unauthorized(new { status = false, message = "Invalid token" });
+            }
+
+            return Ok(new { status = true, message = "User data retrieved", userId, email });
+        }
+
     }
 }
