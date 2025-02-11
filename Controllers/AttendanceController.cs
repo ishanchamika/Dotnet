@@ -43,28 +43,66 @@ namespace Register.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddAttendance(AddAttendanceDto addAttendanceDto)
+        public IActionResult AddAttendance([FromBody] AddAttendanceDto addAttendanceDto)
         {
-            var user = _dbContext.Signups.FirstOrDefault(u => u.Id == addAttendanceDto.UserId);
-            if(user == null)
+            try
             {
-                return Ok(new { status= false, message = "User Not Found" });
-            }
-            TimeZoneInfo sriLankaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Sri Lanka Standard Time");
-            DateTime currentTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, sriLankaTimeZone);
+                var user = _dbContext.Signups.FirstOrDefault(u => u.Id == addAttendanceDto.UserId);
+                if (user == null)
+                {
+                    return Ok(new { status = false, message = "User Not Found" });
+                }
 
-            var attendanceEntity = new Attendance()
+                var existingAttendance = _dbContext.Attendances.FirstOrDefault(a => a.UserId == addAttendanceDto.UserId && a.Date == addAttendanceDto.Date);
+
+                if (existingAttendance != null)
+                {
+                    if (existingAttendance.CameTime != null && existingAttendance.LeftTime != null)
+                    {
+                        return Ok(new { status = false, message = "Already marked your came and left attendance" });
+                    }
+                    else if (existingAttendance.CameTime != null && existingAttendance.LeftTime == null)
+                    {
+                        if(addAttendanceDto.LeftTime == null) 
+                        {
+                            return Ok(new {status = false, message = "Left time Should be required"});
+                        }
+                        existingAttendance.LeftTime = addAttendanceDto.LeftTime;
+                        _dbContext.SaveChanges();
+                        return Ok(new { status = true, message = "Attendance Updated Successfully(left)" });
+                    }
+                    else if (existingAttendance.CameTime == null && existingAttendance.LeftTime == null)
+                    {
+                        if(addAttendanceDto.CameTime == null)
+                        {
+                            return Ok(new { status = false, message = "Came time Should be required" });
+                        }
+                        existingAttendance.CameTime = addAttendanceDto.CameTime;
+                        _dbContext.SaveChanges();
+                        return Ok(new { status = true, message = "Attendance Updated Successfully(came)" });
+                    }
+                    return Ok(new { status = false, message = "Attendance Already marked for Today" });
+                }
+                else
+                {
+                    var attendanceEntity = new Attendance()
+                    {
+                        UserId = addAttendanceDto.UserId,
+                        Date = addAttendanceDto.Date,
+                        CameTime = addAttendanceDto.CameTime,
+                        LeftTime = null,
+                        IsUpdated = false,
+                        Reason = null
+                    };
+                    _dbContext.Attendances.Add(attendanceEntity);
+                    _dbContext.SaveChanges();
+                    return Ok(new { status = true, message = "Attendance Marked Successfully" });
+                }
+            }
+            catch (Exception error)
             {
-                UserId = addAttendanceDto.UserId,
-                Date = currentTime.Date,
-                CameTime = addAttendanceDto.CameTime ?? currentTime,
-                LeftTime = addAttendanceDto.LeftTime ?? currentTime,
-                IsUpdated = addAttendanceDto.IsUpdated,
-                Reason = addAttendanceDto.Reason
-            };
-            _dbContext.Attendances.Add(attendanceEntity);
-            _dbContext.SaveChanges();
-            return Ok(new {status = true, message = "Attendance Added Successfully" });
+                return Ok(new { status = false, message = "An error occurred", error = error.Message });
+            }
         }
     }
 }
