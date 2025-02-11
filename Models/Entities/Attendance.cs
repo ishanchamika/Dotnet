@@ -6,10 +6,10 @@ namespace Register.Models.Entities
     {
         public int Id { get; set; }
         public Guid UserId { get; set; }
-        public DateTime Date { get; set; } = DateTime.UtcNow;
-        public DateTime CameTime { get; set; } = DateTime.UtcNow;
-        public DateTime LeftTime { get; set; } = DateTime.UtcNow;
-        public bool IsUpdated { get; set; } = false;
+        public String Date { get; set; }
+        public String? CameTime { get; set; }
+        public String? LeftTime { get; set; }
+        public bool? IsUpdated { get; set; } = false;
         public string? Reason { get; set; }
 
         [ForeignKey("UserId")]
