@@ -43,6 +43,22 @@ namespace Register.Controllers
         }
 
         [HttpPost]
+        [Route("getAllByUserIdAndDate")]
+        public IActionResult GetAttendanceByUserIdAndDate(AddAttendanceDto addAttendanceDto)
+        {
+            string targetMonth = addAttendanceDto.Date.Substring(0, 7);
+
+            var attendance = _dbContext.Attendances.Where(a => a.UserId == addAttendanceDto.UserId && a.Date.StartsWith(targetMonth)).ToList();
+            if(!attendance.Any())
+            {
+                return Ok(new {status = false, message = "Attendance Not Found" });
+            }
+            return Ok(new { status = true, message = "successfully fetched data", data = attendance });
+        }
+
+
+
+        [HttpPost]
         public IActionResult AddAttendance([FromBody] AddAttendanceDto addAttendanceDto)
         {
             try
