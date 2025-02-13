@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Register.Data;
+using Register.Models;
+using Register.Models.Entities;
 
 namespace Register.Controllers
 {
@@ -37,8 +39,23 @@ namespace Register.Controllers
             return Ok("Get Task By Id");
         }
         [HttpPost]
-        public IActionResult AddTask()
+        public IActionResult AddTask(AddTasksDto addTasksDto)
         {
+            var user = _dbContext.Signups.Find(addTasksDto.UserId);
+            if(user == null)
+            {
+                return Ok(new { status = false, message = "Invalid User" });
+            }
+            var taskEntity = new Tasks()
+            {
+                UserId = addTasksDto.UserId,
+                TaskName = addTasksDto.TaskName,
+                TaskDescription = addTasksDto.TaskDescription,
+                TaskStatus = addTasksDto.TaskStatus,
+                TaskDeadline = addTasksDto.TaskDeadline
+            };
+            _dbContext.Tasks.Add(taskEntity);
+            _dbContext.SaveChanges();
             return Ok("Add Task");
         }
         [HttpPut]
