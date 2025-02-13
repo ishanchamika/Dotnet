@@ -12,6 +12,7 @@ namespace Register.Data
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Signup> Signups { get; set; }
         public DbSet<Attendance> Attendances { get; set; }
+        public DbSet<Tasks> Tasks { get; set; }
     }
 }
 
