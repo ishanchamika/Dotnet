@@ -27,17 +27,24 @@ namespace Register.Controllers
 
             if(allTasks == null || !allTasks.Any())
             {
-                return Ok(Ok(new { status = false, message = "Tasks Not Found" }));
+                return Ok(new { status = false, message = "Tasks Not Found" });
             }
-            return Ok(new { status = true, message = "successfully fetched data", data = allTasks });
+            return Ok(new { status = true, message = "successfully fetched tsks", data = allTasks });
         }
 
         [HttpGet]
-        [Route("{id:guid}")]
-        public IActionResult GetTaskById(Guid id)
+        [Route("{UserId:guid}")]
+        public IActionResult GetTaskById(Guid UserId)
         {
-            return Ok("Get Task By Id");
+            var tasks = _dbContext.Tasks.Where(a => a.UserId == UserId);
+            if (!tasks.Any())
+            {
+                return Ok(new { status = false, message = "Task Not Found" });
+            }
+            return Ok(new {status=true, message="successfylly fetched tasks", tasks});
         }
+
+
         [HttpPost]
         public IActionResult AddTask(AddTasksDto addTasksDto)
         {
@@ -56,8 +63,10 @@ namespace Register.Controllers
             };
             _dbContext.Tasks.Add(taskEntity);
             _dbContext.SaveChanges();
-            return Ok("Add Task");
+            return Ok(new {status=true, message="Task added succesfully"});
         }
+
+
         [HttpPut]
         public IActionResult UpdateTask()
         {
