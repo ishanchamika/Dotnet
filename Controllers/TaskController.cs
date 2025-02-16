@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Register.Data;
 using Register.Models;
 using Register.Models.Entities;
@@ -17,6 +19,36 @@ namespace Register.Controllers
         {
             this._dbContext = _dbContext;
             this.configuration = configuration;
+        }
+
+        [HttpPut]
+        [Route("StartTask/{taskId:int}")]
+        public IActionResult StartTask(int taskId)
+        {
+            try
+            {
+                _dbContext.Database.ExecuteSqlRaw("EXEC UpdateTaskStatusToInProgress @TaskID",new SqlParameter("@TaskID", taskId));
+                return Ok(new { status = true, message = "Task Started" });
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, new { status = false, message = "Error updating task", error = ex.Message });
+            }
+        }
+
+        [HttpPut]
+        [Route("CompleteTask/{taskId:int}")]
+        public IActionResult CompleteTask(int taskId)
+        {
+            try 
+            {
+                _dbContext.Database.ExecuteSqlRaw("EXEC UpdateTaskStatusTOCompleted @TaskID",new SqlParameter("@TaskID", taskId));
+                return Ok(new { status = true, message = "Task Completed" });
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, new { status = false, message = "Error updating task", error = ex.Message });
+            }
         }
 
 
