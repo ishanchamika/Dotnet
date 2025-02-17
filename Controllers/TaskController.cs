@@ -51,8 +51,28 @@ namespace Register.Controllers
             }
         }
 
+        [HttpDelete]
+        [Route("DeleteTask/{taskId:int}")]
+        public IActionResult DeteteTask(int taskId)
+        {
+            try
+            {
+                var task = _dbContext.Tasks.Find(taskId);
+                if (task == null) 
+                {
+                    return Ok(new { status = false, message = "Task Not Found" });
+                }
+                _dbContext.Tasks.Remove(task);
+                _dbContext.SaveChanges();
+                return Ok(new { status = true, message="Task deleted sucessfully"}); 
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { status = false, message = "Error deleting task", error = ex.Message });
+            }
+        }
 
-        [HttpGet]
+            [HttpGet]
         public IActionResult GetAllTasks()
         {
             var allTasks = _dbContext.Tasks.ToList();
