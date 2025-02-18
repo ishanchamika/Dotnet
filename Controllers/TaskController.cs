@@ -51,6 +51,33 @@ namespace Register.Controllers
             }
         }
 
+        [HttpPut]
+        [Route("UpdateTask/{taskId:int}")]
+        public IActionResult UpdateTask(int taskId, UpdateTasksDto updateTasksDto)
+        {
+            if(taskId != updateTasksDto.Id)
+            {
+                return Ok(new { status = false, message = "Task ID mismatch" });
+            }
+            try
+            {
+                _dbContext.Database.ExecuteSqlRaw("EXEC UpdateTask @TaskId, @UserId, @TaskName, @TaskDescription, @TaskStatus, @TaskDeadline",
+                    new SqlParameter("@TaskId", updateTasksDto.Id),
+                    new SqlParameter("@UserId", updateTasksDto.UserId),
+                    new SqlParameter("@TaskName", updateTasksDto.TaskName),
+                    new SqlParameter("@TaskDescription", updateTasksDto.TaskDescription),
+                    new SqlParameter("@TaskStatus", updateTasksDto.TaskStatus),
+                    new SqlParameter("@TaskDeadline", updateTasksDto.TaskDeadline)
+                );
+                return Ok(new {status = true, message= "Task Updated Successfully" });
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, new { status = false, message = "Error updating task", error = ex.Message });
+            }
+        }
+
+
         [HttpDelete]
         [Route("DeleteTask/{taskId:int}")]
         public IActionResult DeteteTask(int taskId)
@@ -72,7 +99,7 @@ namespace Register.Controllers
             }
         }
 
-            [HttpGet]
+        [HttpGet]
         public IActionResult GetAllTasks()
         {
             var allTasks = _dbContext.Tasks.ToList();
