@@ -2,16 +2,16 @@
 
 namespace Register.Models.Entities
 {
-    public sealed class ChatHub : Hub<IChatClient>
+    public sealed class ChatHub : Hub
     {
-        public override async Task OnConnectedAsync()
+        public async Task JoinChat(UserConnections userConnections)
         {
-            await Clients.All.ReceiveMessage($"{Context.ConnectionId} has joined");
+            await Clients.All.SendAsync("ReceivedMessage", "admin", $"{userConnections.Username} has joined");
         }
 
-        public async Task SendMessage(string message)
+        public async Task JoinSpecificChatRoom(UserConnections userConnections)
         {
-            await Clients.All.ReceiveMessage($"{Context.ConnectionId}: message");
+            await Groups.AddToGroupAsync(Context.ConnectionId, userConnections.ChatRoom);
         }
     }
 }
