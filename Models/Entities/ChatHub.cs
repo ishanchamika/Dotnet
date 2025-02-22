@@ -12,6 +12,7 @@ namespace Register.Models.Entities
         public async Task JoinSpecificChatRoom(UserConnections userConnections)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, userConnections.ChatRoom);
+            await Clients.Group(userConnections.ChatRoom).SendAsync("ReceiveMessage", "admin", $"{userConnections.Username} has joined {userConnections.ChatRoom}");
         }
     }
 }
