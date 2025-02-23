@@ -21,9 +21,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins, policy =>
     {
-        policy.WithOrigins("http://localhost:4200")
+        policy.WithOrigins("http://localhost:4001")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -46,6 +47,12 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+//---------------SignalR----------------
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+});
+
 
 var app = builder.Build();
 
@@ -56,11 +63,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.MapPost("broadcast", async (string message, IHubContext<ChatHub, IChatClient> context) =>
-{
-    await context.Clients.All.ReceiveMessage(message);
-    return Results.NoContent();
-});
+//app.MapPost("broadcast", async (string message, IHubContext<ChatHub, IChatClient> context) =>
+//{
+//    await context.Clients.All.ReceiveMessage(message);
+//    return Results.NoContent();
+//});
 app.UseAuthentication();
 
 app.UseHttpsRedirection();
@@ -71,6 +78,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapHub<ChatHub>("chat-hub");
+app.MapHub<ChatHub>("/Chat");
 
 app.Run();
