@@ -21,12 +21,14 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins, policy =>
     {
-        policy.WithOrigins("http://localhost:4001")
+        policy.WithOrigins("http://localhost:4200", "https://693c-2402-4000-b2c0-a959-d5b1-94f7-8baf-6b00.ngrok-free.app")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
     });
 });
+
+builder.Services.AddSingleton<SharedDb>();
 
 //----------JWT-------------------
 builder.Services.AddAuthentication(options =>
