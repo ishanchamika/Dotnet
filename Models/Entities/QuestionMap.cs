@@ -7,16 +7,14 @@ public class QuestionMap
     [Key]
     public int Id { get; set; }
     public string Note { get; set; }
-
-    [ForeignKey("Question")]
     public int Current_qid { get; set; }
-
     public int Next_qid { get; set; }
     public int Prev_qid { get; set; }
-
-    [ForeignKey("Component")]
     public int ComponentId { get; set; }
 
-    public Question Question { get; set; }
-    public Component Component { get; set; }
+    //[ForeignKey(nameof(Current_qid))]
+    //public Question? CurrentQuestion { get; set; }
+
+    //[ForeignKey(nameof(ComponentId))]
+    //public Component? Component { get; set; }
 }
